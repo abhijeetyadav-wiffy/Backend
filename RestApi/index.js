@@ -6,8 +6,24 @@ const PORT = 8000;
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 
+app.use((req, res, next) => {
+  fs.appendFile(
+    "log.txt",
+    `\n${Date.now()}: ${req.method} ${req.path}`,
+    (err, data) => {
+      next();
+    },
+  );
+  next();
+});
+
+app.use((req, res, next) => {
+  console.log("Hello From MIddleware 2", req.myUserName);
+  next();
+});
+
+//Routes
 app.get("/users", (req, res) => {
   const html = `
     <ul>
@@ -18,12 +34,13 @@ app.get("/users", (req, res) => {
 });
 
 app.get("/api/users", (req, res) => {
+  res.setHeader('myName', "Abhijeet Yadav")//custom headers
+  console.log(req.headers)
   return res.json(users);
 });
 
 app
   .route("/api/users/:id")
-
   // GET
   .get((req, res) => {
     const id = Number(req.params.id);
@@ -36,7 +53,7 @@ app
     const id = Number(req.params.id);
     const body = req.body;
 
-    console.log("PATCH BODY:", body); 
+    console.log("PATCH BODY:", body);
 
     const index = users.findIndex((user) => user.id === id);
 
