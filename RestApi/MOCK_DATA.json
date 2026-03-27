@@ -32,14 +32,6 @@
     "job_title": "Nuclear Power Engineer"
   },
   {
-    "id": 5,
-    "first_name": "Eward",
-    "last_name": "Castiblanco",
-    "email": "ecastiblanco4@mapy.cz",
-    "gender": "Male",
-    "job_title": "Geological Engineer"
-  },
-  {
     "id": 6,
     "first_name": "Tammara",
     "last_name": "Nacey",
@@ -7998,5 +7990,22 @@
     "email": "cbeahanrr@bing.com",
     "gender": "Male",
     "job_title": "Senior Financial Analyst"
-  }
+  },
+  {
+    "first_name": "Abhijeet",
+    "last_name": "Yadav",
+    "email": "abhijeet.yadav@wiffy.ai",
+    "gender": "male",
+    "job_title": "Intern ",
+    "id": 1001
+  },
+  {
+    "first_name": "Ronak ",
+    "last_name": "Singh ",
+    "email": "ronak.singh@email.com",
+    "gender": "male",
+    "job_title": "Student ",
+    "id": 1002
+  },
+  { "id": 1003 }
 ]
