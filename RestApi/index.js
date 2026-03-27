@@ -36,6 +36,8 @@ app
     const id = Number(req.params.id);
     const body = req.body;
 
+    console.log("PATCH BODY:", body); 
+
     const index = users.findIndex((user) => user.id === id);
 
     if (index === -1) {
@@ -44,13 +46,18 @@ app
 
     users[index] = { ...users[index], ...body };
 
-    fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err, data) => {
-      return res.json({ status: "success", updatedId: id });
+    fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err) => {
+      if (err) {
+        console.log("WRITE ERROR:", err);
+        return res.json({ status: "error", message: "File not updated" });
+      }
+
+      return res.json({ status: "success", updatedUser: users[index] });
     });
   })
 
   // DELETE
-.delete((req, res) => {
+  .delete((req, res) => {
     const id = Number(req.params.id);
 
     const index = users.findIndex((user) => user.id === id);
