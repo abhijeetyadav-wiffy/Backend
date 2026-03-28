@@ -6,6 +6,7 @@ const PORT = 8000;
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use((req, res, next) => {
   fs.appendFile(
@@ -34,8 +35,8 @@ app.get("/users", (req, res) => {
 });
 
 app.get("/api/users", (req, res) => {
-  res.setHeader('myName', "Abhijeet Yadav")//custom headers
-  console.log(req.headers)
+  // res.setHeader("myName", "Abhijeet Yadav"); //custom headers
+  // console.log(req.headers);
   return res.json(users);
 });
 
@@ -93,12 +94,22 @@ app
 // POST
 app.post("/api/users", (req, res) => {
   const body = req.body;
+  if (
+    !body ||
+    !body.first_name ||
+    !body.last_name ||
+    !body.email ||
+    !body.gender||
+    !body.job_title
+  ) {
+    return res.status(400).json({ msg: " All Field are Required" });
+  }
   console.log("Body", body);
 
   users.push({ ...body, id: users.length + 1 });
 
   fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err, data) => {
-    return res.json({ status: "success", id: users.length });
+    return res.status(201).json({ status: "success", id: users.length });
   });
 });
 
