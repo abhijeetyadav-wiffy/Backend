@@ -1,14 +1,24 @@
-const express = require("express");
+import express from "express";
+import {config} from 'dotenv'
+import { connectDB, disconnectDb } from "./config/db.js";
+
+//All Routes
+
+import movieRoutes from './routes/movieRoutes.js'
+
+config();
+connectDB();
+
 const app = express();
-const PORT = 4000
 
-app.get("/hello", (req,res) =>{
-  res.json({ msg: "Hello Backend"})
-})
+app.use("/movie",movieRoutes)
 
 
 
 
+const PORT = 4000;
 app.listen(PORT, () => {
   console.log(`Server is running on Port http://localhost:${PORT}`);
 });
+
+
