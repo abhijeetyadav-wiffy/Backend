@@ -46,6 +46,7 @@ app
   .get((req, res) => {
     const id = Number(req.params.id);
     const user = users.find((user) => user.id === id);
+    if (!user) return res.status(404).json({ msg: "User Not Found" });
     return res.json(user);
   })
 
@@ -77,6 +78,7 @@ app
   // DELETE
   .delete((req, res) => {
     const id = Number(req.params.id);
+    if (!id) return res.status(404).json({ msg: "user Not Found" });
 
     const index = users.findIndex((user) => user.id === id);
 
@@ -99,7 +101,7 @@ app.post("/api/users", (req, res) => {
     !body.first_name ||
     !body.last_name ||
     !body.email ||
-    !body.gender||
+    !body.gender ||
     !body.job_title
   ) {
     return res.status(400).json({ msg: " All Field are Required" });
