@@ -1,17 +1,21 @@
 import express from "express";
 import {config} from 'dotenv'
-import { connectDB, disconnectDb } from "./config/db.js";
 
 //All Routes
-
 import movieRoutes from './routes/movieRoutes.js'
+import authRoutes from './routes/authRoutes.js'
+
 
 config();
-connectDB();
-
 const app = express();
 
+//Body parsing Middlewares
+app.use(express.json())
+app.use(express.urlencoded({ extended: true}))
+
+//All Routes
 app.use("/movie",movieRoutes)
+app.use("/auth",authRoutes)
 
 
 

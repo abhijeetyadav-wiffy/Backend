@@ -2,8 +2,14 @@ import express from "express";
 
 const router = express.Router()
 
-router.get("/", (req, res) =>{
+const checkIfBodyExits = (req,res,next) => {
+    const body = req.body;
+    if(!body) return res.status(400).json({msg : "error"})
+    next();
+}
+router.get("/", checkIfBodyExits,(req, res) => {
     res.json({ msg: "Hello from GET"})
+    
 })
 
 router.post("/", (req, res) =>{

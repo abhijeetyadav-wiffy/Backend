@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client/extension";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient({
   log:
@@ -7,18 +7,4 @@ const prisma = new PrismaClient({
       : ["error"],
 });
 
-const connectDB = async () => {
-  try {
-    await prisma.$connectDB();
-    console.log("Database COnnect vai Prisma");
-  } catch (error) {
-    consolog.error(`Error in Connection: ${error.message}`);
-    process.exit(1);
-  }
-};
-
-const disconnectDb = async () => {
-  await prisma.$DisconnectDB();
-};
-
-export { prisma, connectDB, disconnectDb };
+export { prisma }; 
