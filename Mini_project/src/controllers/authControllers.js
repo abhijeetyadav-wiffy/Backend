@@ -1,22 +1,32 @@
 import { prisma } from "../config/db.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "your_super_secret_key";
 
 const register = async (req, res) => {
   const { email, name, password } = req.body;
 
-  //Check id user exists
+  // Validate input
+  if (!email || !name || !password) {
+    return res
+      .status(400)
+      .json({ error: "Please provide all required fields" });
+  }
+
+  // Check if user exists
   const userExists = await prisma.user.findUnique({
     where: { email: email },
   });
   if (userExists) {
-    return res.status(400).json({ error: "User Already Exits" });
+    return res.status(400).json({ error: "User already exists" });
   }
 
-  //hash Paasword
+  // Hash Password
   const salt = await bcrypt.genSalt(10);
   const hashPassword = await bcrypt.hash(password, salt);
 
-  //Create User
+  // Create User
   const user = await prisma.user.create({
     data: {
       name,
@@ -25,12 +35,18 @@ const register = async (req, res) => {
     },
   });
 
+  // Generate JWT token
+  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
+    expiresIn: "7d",
+  });
+
   res.status(201).json({
     status: "success",
     data: {
       id: user.id,
-      name: name,
-      email: email,
+      name: user.name,
+      email: user.email,
+      token,
     },
   });
 };
@@ -38,16 +54,39 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
 
+  // Validate input
+  if (!email || !password) {
+    return res.status(400).json({ error: "Please provide email and password" });
+  }
+
   const user = await prisma.user.findUnique({
     where: { email: email },
   });
 
   if (!user) {
-    return (
-      res.status(400),
-      json({ error: "User already exits with this email" })
-    );
+    return res.status(400).json({ error: "Invalid credentials" });
   }
+
+  // Compare password
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    return res.status(400).json({ error: "Invalid credentials" });
+  }
+
+  // Generate JWT token
+  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
+    expiresIn: "7d",
+  });
+
+  res.json({
+    status: "success",
+    data: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      token,
+    },
+  });
 };
 
-export { register,login };
+export { register, login };
