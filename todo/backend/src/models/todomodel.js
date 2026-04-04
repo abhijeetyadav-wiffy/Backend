@@ -2,6 +2,7 @@ import pool from "../config/db.js";
 
 export const getAllTodos = async () => {
   const result = await pool.query("SELECT * FROM todos ORDER BY id ASC");
+  console.log(result)
   return result.rows;
 };
 

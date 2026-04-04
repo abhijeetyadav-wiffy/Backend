@@ -4,7 +4,7 @@ import {
   getTodosByUserId,
   updateTodoByUserId,
   deleteTodoByUserId,
-  updateTodoCompleted
+  updateTodoCompleted,
 } from "../models/todomodel.js";
 import { createUser } from "../models/usermodel.js";
 
@@ -67,21 +67,6 @@ export const getTodosByUserHandler = async (req, res) => {
 
 export const createTodoHandler = async (req, res) => {
   try {
-    const { title, user_id } = req.body;
-
-    if (!title) {
-      return res.status(400).json({
-        success: false,
-        message: "Title is required",
-      });
-    }
-    if (!user_id) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID is required",
-      });
-    }
-
     const newTodo = await createTodo(title, user_id);
     res.status(201).json({
       success: true,
@@ -127,7 +112,6 @@ export const updateTodoByUserHandler = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
-
 
 export const updateTodoCompletedHandler = async (req, res) => {
   try {
