@@ -128,7 +128,6 @@ export const updateTodoByUserHandler = async (req, res) => {
   }
 };
 
-import { updateTodoCompleted } from "../models/todomodel.js";
 
 export const updateTodoCompletedHandler = async (req, res) => {
   try {
