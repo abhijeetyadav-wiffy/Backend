@@ -1,121 +1,200 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
+
+const API_BASE = "/api/todos";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [userName, setUserName] = useState("");
+  const [currentUserId, setCurrentUserId] = useState("1");
+  const [todoTitle, setTodoTitle] = useState("");
+  const [todos, setTodos] = useState([]);
+  const [status, setStatus] = useState("Create or select a user first.");
+  const [isUserSelected, setIsUserSelected] = useState(false);
+
+  const apiRequest = async (path, options = {}) => {
+    const response = await fetch(`${API_BASE}${path}`, options);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Request failed");
+    }
+    return data;
+  };
+
+  const loadTodos = async (userId) => {
+    setStatus("Loading todos...");
+    const data = await apiRequest(`/user/${userId}`);
+    setTodos(data.data || []);
+    setStatus(`Loaded ${data.data?.length || 0} todo(s)`);
+  };
+
+  const handleCreateUser = async (event) => {
+    event.preventDefault();
+    if (!userName.trim()) return;
+
+    try {
+      setStatus("Creating user...");
+      const data = await apiRequest(`/user`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: userName.trim() }),
+      });
+
+      setCurrentUserId(String(data.data.id));
+      setIsUserSelected(true);
+      setUserName("");
+      await loadTodos(String(data.data.id));
+    } catch (error) {
+      setStatus(error.message);
+    }
+  };
+
+  const handleUseExistingUser = async () => {
+    if (!currentUserId.trim()) {
+      setStatus("Please enter user ID");
+      return;
+    }
+
+    try {
+      await loadTodos(currentUserId);
+      setIsUserSelected(true);
+      setStatus(`Using user ID ${currentUserId}`);
+    } catch (error) {
+      setIsUserSelected(false);
+      setStatus(error.message);
+    }
+  };
+
+  const handleCreateTodo = async (event) => {
+    event.preventDefault();
+    if (!todoTitle.trim() || !currentUserId) return;
+
+    try {
+      setStatus("Creating todo...");
+      await apiRequest(``, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: todoTitle.trim(),
+          user_id: Number(currentUserId),
+        }),
+      });
+
+      setTodoTitle("");
+      await loadTodos(currentUserId);
+    } catch (error) {
+      setStatus(error.message);
+    }
+  };
+
+  const handleToggleCompleted = async (todo) => {
+    try {
+      await apiRequest(`/user/${currentUserId}/${todo.id}/completed`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: !todo.completed }),
+      });
+      await loadTodos(currentUserId);
+    } catch (error) {
+      setStatus(error.message);
+    }
+  };
+
+  const handleDeleteTodo = async (todoId) => {
+    try {
+      await apiRequest(`/user/${currentUserId}/${todoId}`, {
+        method: "DELETE",
+      });
+      await loadTodos(currentUserId);
+    } catch (error) {
+      setStatus(error.message);
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <main className="app">
+      <h1>Todo App</h1>
+
+      <section className="card">
+        <h2>Create user</h2>
+        <form onSubmit={handleCreateUser} className="row">
+          <input
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
+            placeholder="Enter user name"
+          />
+          <button type="submit">Create user</button>
+        </form>
+      </section>
+
+      <section className="card">
+        <h2>Use existing user</h2>
+        <div className="row">
+          <input
+            value={currentUserId}
+            onChange={(e) => setCurrentUserId(e.target.value)}
+            placeholder="User ID"
+          />
+          <button type="button" onClick={handleUseExistingUser}>
+            Continue
+          </button>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+      </section>
+
+      {isUserSelected ? (
+        <>
+          <section className="card">
+            <h2>Add todo (User ID: {currentUserId})</h2>
+            <form onSubmit={handleCreateTodo} className="row">
+              <input
+                value={todoTitle}
+                onChange={(e) => setTodoTitle(e.target.value)}
+                placeholder="Todo title"
+              />
+              <button type="submit">Add todo</button>
+            </form>
+          </section>
+
+          <section className="card">
+            <h2>Todos</h2>
+            {todos.length === 0 ? (
+              <p>No todos found for this user.</p>
+            ) : (
+              <ul className="todo-list">
+                {todos.map((todo) => (
+                  <li key={todo.id} className="todo-item">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(todo.completed)}
+                        onChange={() => handleToggleCompleted(todo)}
+                      />
+                      <span className={todo.completed ? "done" : ""}>
+                        {todo.title}
+                      </span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTodo(todo.id)}
+                    >
+                      Delete
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      ) : (
+        <section className="card">
+          <p className="hint">
+            First create a user or continue with an existing user ID.
           </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+        </section>
+      )}
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <p className="status">{status}</p>
+    </main>
+  );
 }
 
-export default App
+export default App;
