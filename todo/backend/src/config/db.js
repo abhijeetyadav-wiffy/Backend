@@ -9,11 +9,12 @@ const pool = new Pool({
   port: 5432,
 });
 
-pool.connect()
-  .then(client => {
+pool
+  .connect()
+  .then((client) => {
     console.log("Connected to DB");
     client.release();
   })
-  .catch(err => console.error("DB connection error", err));
+  .catch((err) => console.error("DB connection error", err));
 
 export default pool;

@@ -1,49 +1,36 @@
+import {
+  getAllTodos,
+  createTodo,
+  getTodosByUserId,
+  updateTodoByUserId,
+  deleteTodoByUserId,
+} from "../models/todomodel.js";
+
 export const getTodos = async (req, res) => {
   try {
+    const todos = await getAllTodos();
+
     res.status(200).json({
       success: true,
-      message: "Get Todos",
+      data: todos,
     });
   } catch (error) {
-    res.status(500).json({ erro: "Internal Server Error" });
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
-export const createTodos = async (req, res) => {
+export const getTodosByUserHandler = async (req, res) => {
   try {
-    const { title } = req.body;
-
-    if (!title) {
-      return res.status(400).json({
-        success: false,
-        message: "Title is required",
-      });
-    }
-    res.status(201).json({
+    const { user_id } = req.params;
+    const todos = await getTodosByUserId(user_id);
+    res.status(200).json({
       success: true,
-      message: "Todo created",
-      data: { title },
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Server error" });
-  }
-};
-
-export const createTodo = async (req, res) => {
-  try {
-    const { title } = req.body;
-
-    if (!title) {
-      return res.status(400).json({
-        success: false,
-        message: "Title is required",
-      });
-    }
-
-    res.status(201).json({
-      success: true,
-      message: "Todo created",
-      data: { title },
+      data: todos,
     });
   } catch (error) {
     res.status(500).json({
@@ -53,9 +40,37 @@ export const createTodo = async (req, res) => {
   }
 };
 
-export const updateTodos = async (req, res) => {
+export const createTodoHandler = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { title, user_id } = req.body;
+
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        message: "Title is required",
+      });
+    }
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    const newTodo = await createTodo(title, user_id);
+    res.status(201).json({
+      success: true,
+      message: "Todo created",
+      data: newTodo,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+export const updateTodoByUserHandler = async (req, res) => {
+  try {
+    const { id, user_id } = req.params;
     const { title } = req.body;
 
     if (!title) {
@@ -64,28 +79,65 @@ export const updateTodos = async (req, res) => {
         message: "Title is required",
       });
     }
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    const updatedTodo = await updateTodoByUserId(id, user_id, title);
+    if (!updatedTodo) {
+      return res.status(404).json({
+        success: false,
+        message: "Todo not found for this user",
+      });
+    }
     res.status(200).json({
       success: true,
-      message: `todo updated ${id}`,
-      data: { title },
+      message: `Todo updated`,
+      data: updatedTodo,
     });
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }
 };
 
-export const deleteTodos = async (req, res) => {
-  try {
-    const { id } = req.params;
+// export const deleteTodos = async (req, res) => {
+//   try {
+//     const { id } = req.params;
 
+//     res.status(200).json({
+//       success: true,
+//       message: `Deleted todo ${id}`,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Server error",
+//     });
+//   }
+// };
+
+export const deleteTodoUserByIdHandler = async (req, res) => {
+  try {
+    const { id, user_id } = req.params;
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is Required",
+      });
+    }
+    const deleteTodo = await deleteTodoByUserId(user_id, id);
     res.status(200).json({
       success: true,
-      message: `Deleted todo ${id}`,
-    });
+      message: `Todo deleted`,
+      data: deleteTodo,
+    })
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server Error",
     });
   }
 };
