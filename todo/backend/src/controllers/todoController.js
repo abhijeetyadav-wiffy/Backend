@@ -4,7 +4,32 @@ import {
   getTodosByUserId,
   updateTodoByUserId,
   deleteTodoByUserId,
+  updateTodoCompleted
 } from "../models/todomodel.js";
+import { createUser } from "../models/usermodel.js";
+
+export const createUserHandler = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: "Name is required",
+      });
+    }
+    const user = await createUser(name);
+    res.status(201).json({
+      success: true,
+      message: "User created",
+      data: user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
 
 export const getTodos = async (req, res) => {
   try {
@@ -103,6 +128,35 @@ export const updateTodoByUserHandler = async (req, res) => {
   }
 };
 
+import { updateTodoCompleted } from "../models/todomodel.js";
+
+export const updateTodoCompletedHandler = async (req, res) => {
+  try {
+    const { id, user_id } = req.params;
+    const { completed } = req.body;
+    if (typeof completed !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "Completed must be a boolean",
+      });
+    }
+    const updatedTodo = await updateTodoCompleted(id, user_id, completed);
+    if (!updatedTodo) {
+      return res.status(404).json({
+        success: false,
+        message: "Todo not found for this user",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Todo completion updated",
+      data: updatedTodo,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 // export const deleteTodos = async (req, res) => {
 //   try {
 //     const { id } = req.params;
@@ -133,7 +187,7 @@ export const deleteTodoUserByIdHandler = async (req, res) => {
       success: true,
       message: `Todo deleted`,
       data: deleteTodo,
-    })
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,

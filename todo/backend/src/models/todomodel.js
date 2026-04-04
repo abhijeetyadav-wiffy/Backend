@@ -36,3 +36,11 @@ export const deleteTodoByUserId = async (user_id, id) => {
   );
   return result.rows[0];
 };
+
+export const updateTodoCompleted = async (id, user_id, completed) => {
+  const result = await pool.query(
+    "UPDATE todos SET completed = $1 WHERE id = $2 AND user_id = $3 RETURNING *",
+    [completed, id, user_id]
+  );
+  return result.rows[0];
+};

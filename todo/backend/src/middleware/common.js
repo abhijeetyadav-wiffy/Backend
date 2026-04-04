@@ -4,9 +4,9 @@ export function logger(req, res, next) {
   next();
 }
 
-// Example authentication middleware (stub)
+// Example authentication middleware 
 export function authenticate(req, res, next) {
-  // Add authentication logic here
+  //  authentication logic here
   // For now, just call next()
   next();
 }
