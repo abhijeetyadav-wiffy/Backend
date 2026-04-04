@@ -8,9 +8,11 @@ const app = express();
 const PORT = 8000;
 
 //middlerware
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use('/todos',appRoutes)
+
+app.use('/api/todos',appRoutes)
 
 const db = pool;
 
