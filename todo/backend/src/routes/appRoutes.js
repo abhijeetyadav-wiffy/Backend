@@ -36,6 +36,4 @@ router.patch(
   updateTodoCompletedHandler,
 );
 
-//Auth
-
 export default router;
