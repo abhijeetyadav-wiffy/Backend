@@ -1,8 +1,6 @@
 import { prisma } from "../config/db.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET || "your_super_secret_key";
+import { genrateToken } from "../utlis/generateToken.js";
 
 const register = async (req, res) => {
   const { email, name, password } = req.body;
@@ -34,19 +32,15 @@ const register = async (req, res) => {
       password: hashPassword,
     },
   });
-
-  // Generate JWT token
-  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
-    expiresIn: "7d",
-  });
-
   res.status(201).json({
-    status: "success",
+    succcess: true,
+    message: "User Created Successfully",
     data: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      token,
+      user: {
+        id: user.id,
+        name: name,
+        email: email,
+      },
     },
   });
 };
@@ -54,39 +48,46 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
 
-  // Validate input
-  if (!email || !password) {
-    return res.status(400).json({ error: "Please provide email and password" });
-  }
-
+  //Check if user email exits in the table
   const user = await prisma.user.findUnique({
     where: { email: email },
   });
 
   if (!user) {
-    return res.status(400).json({ error: "Invalid credentials" });
+    return res.status(401).json({ error: "Invalid email aqnd password" });
   }
 
-  // Compare password
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    return res.status(400).json({ error: "Invalid credentials" });
+  //verify password
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordValid) {
+    return res.status(401).json({ error: "Invalid email aqnd password" });
   }
+  //Genrate JWt Tokens
+  const token = genrateToken(user.id, user.email);
 
-  // Generate JWT token
-  const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
-    expiresIn: "7d",
-  });
-
-  res.json({
-    status: "success",
+  res.status(200).json({
+    success: true,
+    message: "User logged in successfully",
     data: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
+      user: {
+        id: user.id,
+        email: user.email,
+      },
       token,
     },
   });
 };
 
-export { register, login };
+const logout = async (req, res) => {
+  res.cookie("jwt", "", {
+    httpOnly: true,
+    expires: new Date(0),
+  });
+  res.status(200).json({
+    status: "success",
+    message: "User Logged out Succesfully",
+  });
+};
+
+export { register, login, logout };

@@ -1,6 +1,5 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
-import pool from "./config/db.js";
 import { logger } from "./middleware/common.js";
 import { customRouting } from "./middleware/routing.js";
 
@@ -29,8 +28,6 @@ app.use(logger);
 app.use(customRouting);
 
 app.use("/api/todos", apiLimiter, appRoutes);
-
-const db = pool;
 
 app.listen(PORT, () => {
   console.log("Server is running on 8000");

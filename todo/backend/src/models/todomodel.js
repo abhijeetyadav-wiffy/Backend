@@ -1,47 +1,57 @@
-import pool from "../config/db.js";
+import prisma from "../config/prisma.js";
 
 export const getAllTodos = async () => {
-  const result = await pool.query("SELECT * FROM todos ORDER BY id ASC");
-  console.log(result)
-  return result.rows;
+  return await prisma.todos.findMany({
+    orderBy: { id: "asc" },
+  });
 };
 
 export const createTodo = async (title, user_id) => {
-  const result = await pool.query(
-    "INSERT INTO todos (title, user_id) VALUES ($1, $2) RETURNING *",
-    [title, user_id],
-  );
-  return result.rows[0];
+  return await prisma.todos.create({
+    data: {
+      title,
+      user_id: Number(user_id),
+      completed: false,
+    },
+  });
 };
 
 export const getTodosByUserId = async (user_id) => {
-  const result = await pool.query(
-    "SELECT * FROM todos WHERE user_id = $1 ORDER BY id ASC",
-    [user_id],
-  );
-  return result.rows;
+  return await prisma.todos.findMany({
+    where: { user_id: Number(user_id) },
+    orderBy: { id: "asc" },
+  });
 };
 
 export const updateTodoByUserId = async (id, user_id, title) => {
-  const result = await pool.query(
-    "UPDATE todos SET title = $1 WHERE id = $2 AND user_id = $3 RETURNING *",
-    [title, id, user_id],
-  );
-  return result.rows[0];
+  return await prisma.todos.updateMany({
+    where: {
+      id: Number(id),
+      user_id: Number(user_id),
+    },
+    data: {
+      title,
+    },
+  });
 };
 
 export const deleteTodoByUserId = async (user_id, id) => {
-  const result = await pool.query(
-    "DELETE FROM todos WHERE user_id = $1 AND id = $2 RETURNING *",
-    [user_id, id],
-  );
-  return result.rows[0];
+  return await prisma.todos.deleteMany({
+    where: {
+      id: Number(id),
+      user_id: Number(user_id),
+    },
+  });
 };
 
 export const updateTodoCompleted = async (id, user_id, completed) => {
-  const result = await pool.query(
-    "UPDATE todos SET completed = $1 WHERE id = $2 AND user_id = $3 RETURNING *",
-    [completed, id, user_id]
-  );
-  return result.rows[0];
+  return await prisma.todos.updateMany({
+    where: {
+      id: Number(id),
+      user_id: Number(user_id),
+    },
+    data: {
+      completed,
+    },
+  });
 };

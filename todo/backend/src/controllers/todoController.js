@@ -67,6 +67,7 @@ export const getTodosByUserHandler = async (req, res) => {
 
 export const createTodoHandler = async (req, res) => {
   try {
+    const { title, user_id } = req.body;
     const newTodo = await createTodo(title, user_id);
     res.status(201).json({
       success: true,
