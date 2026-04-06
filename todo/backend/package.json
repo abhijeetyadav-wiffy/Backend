@@ -11,9 +11,12 @@
   },
   "dependencies": {
     "@prisma/client": "^4.16.2",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",
     "express-validator": "^7.3.2",
+    "jsonwebtoken": "^9.0.3",
     "nodemon": "^3.1.14",
     "prisma": "^4.16.2"
   }
