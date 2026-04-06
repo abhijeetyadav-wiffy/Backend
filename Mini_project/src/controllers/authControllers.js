@@ -54,7 +54,7 @@ const login = async (req, res) => {
   });
 
   if (!user) {
-    return res.status(401).json({ error: "Invalid email aqnd password" });
+    return res.status(401).json({ error: "Invalid email and password" });
   }
 
   //verify password

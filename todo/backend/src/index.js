@@ -1,10 +1,10 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
-import { logger } from "./middleware/common.js";
-import { customRouting } from "./middleware/routing.js";
 
 //routes
 import appRoutes from "./routes/appRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+
 
 const app = express();
 const PORT = 8000;
@@ -24,10 +24,9 @@ const apiLimiter = rateLimit({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use(logger);
-app.use(customRouting);
 
 app.use("/api/todos", apiLimiter, appRoutes);
+app.use("/api/auth", authRoutes);
 
 
 app.listen(PORT, () => {

@@ -11,12 +11,7 @@ import { createUser } from "../models/usermodel.js";
 export const createUserHandler = async (req, res) => {
   try {
     const { name } = req.body;
-    if (!name) {
-      return res.status(400).json({
-        success: false,
-        message: "Name is required",
-      });
-    }
+
     const user = await createUser(name);
     res.status(201).json({
       success: true,
@@ -84,19 +79,6 @@ export const updateTodoByUserHandler = async (req, res) => {
     const { id, user_id } = req.params;
     const { title } = req.body;
 
-    if (!title) {
-      return res.status(400).json({
-        success: false,
-        message: "Title is required",
-      });
-    }
-    if (!user_id) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID is required",
-      });
-    }
-
     const updatedTodo = await updateTodoByUserId(id, user_id, title);
     if (!updatedTodo) {
       return res.status(404).json({
@@ -118,12 +100,7 @@ export const updateTodoCompletedHandler = async (req, res) => {
   try {
     const { id, user_id } = req.params;
     const { completed } = req.body;
-    if (typeof completed !== "boolean") {
-      return res.status(400).json({
-        success: false,
-        message: "Completed must be a boolean",
-      });
-    }
+
     const updatedTodo = await updateTodoCompleted(id, user_id, completed);
     if (!updatedTodo) {
       return res.status(404).json({
@@ -160,12 +137,6 @@ export const updateTodoCompletedHandler = async (req, res) => {
 export const deleteTodoUserByIdHandler = async (req, res) => {
   try {
     const { id, user_id } = req.params;
-    if (!user_id) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID is Required",
-      });
-    }
     const deleteTodo = await deleteTodoByUserId(user_id, id);
     res.status(200).json({
       success: true,
