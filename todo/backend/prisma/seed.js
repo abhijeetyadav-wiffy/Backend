@@ -81,7 +81,9 @@ async function main() {
     });
   }
 
-  console.log(`Seeded ${upsertedUsers.length} users and ${todoRows.length} todos.`);
+  console.log(
+    `Seeded ${upsertedUsers.length} users and ${todoRows.length} todos.`,
+  );
 }
 
 main()
