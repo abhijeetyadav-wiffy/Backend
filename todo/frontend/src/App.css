@@ -23,6 +23,15 @@
   font-size: 1rem;
 }
 
+.header-row {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-row h2 {
+  margin: 0;
+}
+
 .row {
   display: flex;
   gap: 10px;
@@ -38,6 +47,11 @@ input {
   font-size: 15px;
   color: #0f172a;
   background: #ffffff;
+}
+
+input[type="email"],
+input[type="password"] {
+  min-width: 180px;
 }
 
 input::placeholder {

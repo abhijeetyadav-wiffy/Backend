@@ -1,86 +1,153 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./App.css";
-
-const API_BASE = "/api/todos";
+import AuthForms from "./components/AuthForms";
+import SessionHeader from "./components/SessionHeader";
+import TodoSection from "./components/TodoSection";
+import { useSession } from "./hooks/useSession";
+import { loginUser, logoutUser, registerUser } from "./services/authService";
+import {
+  createTodo,
+  getUserTodos,
+  removeTodo,
+  updateTodoCompleted,
+} from "./services/todoService";
 
 function App() {
-  const [userName, setUserName] = useState("");
-  const [currentUserId, setCurrentUserId] = useState("1");
+  const [registerForm, setRegisterForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [loginForm, setLoginForm] = useState({
+    email: "",
+    password: "",
+  });
   const [todoTitle, setTodoTitle] = useState("");
   const [todos, setTodos] = useState([]);
-  const [status, setStatus] = useState("Create or select a user first.");
-  const [isUserSelected, setIsUserSelected] = useState(false);
+  const [status, setStatus] = useState("Register or login to continue.");
+  const {
+    authToken,
+    currentUser,
+    isAuthenticated,
+    persistSession,
+    clearSession,
+  } = useSession();
 
-  const apiRequest = async (path, options = {}) => {
-    const response = await fetch(`${API_BASE}${path}`, options);
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || "Request failed");
-    }
-    return data;
+  const loadTodos = useCallback(
+    async (userId) => {
+      setStatus("Loading todos...");
+      const data = await getUserTodos(userId, authToken);
+      setTodos(data.data || []);
+      setStatus(`Loaded ${data.data?.length || 0} todo(s)`);
+    },
+    [authToken],
+  );
+
+  const setRegisterField = (field, value) => {
+    setRegisterForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const loadTodos = async (userId) => {
-    setStatus("Loading todos...");
-    const data = await apiRequest(`/user/${userId}`);
-    setTodos(data.data || []);
-    setStatus(`Loaded ${data.data?.length || 0} todo(s)`);
+  const setLoginField = (field, value) => {
+    setLoginForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const handleCreateUser = async (event) => {
+  const handleRegister = async (event) => {
     event.preventDefault();
-    if (!userName.trim()) return;
 
-    try {
-      setStatus("Creating user...");
-      const data = await apiRequest(`/user`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: userName.trim() }),
-      });
+    const name = registerForm.name.trim();
+    const email = registerForm.email.trim();
+    const password = registerForm.password;
 
-      setCurrentUserId(String(data.data.id));
-      setIsUserSelected(true);
-      setUserName("");
-      await loadTodos(String(data.data.id));
-    } catch (error) {
-      setStatus(error.message);
-    }
-  };
-
-  const handleUseExistingUser = async () => {
-    if (!currentUserId.trim()) {
-      setStatus("Please enter user ID");
+    if (!name || !email || !password) {
+      setStatus("Name, email and password are required");
       return;
     }
 
     try {
-      await loadTodos(currentUserId);
-      setIsUserSelected(true);
-      setStatus(`Using user ID ${currentUserId}`);
+      setStatus("Registering user...");
+      const data = await registerUser({ name, email, password });
+
+      const user = data.data;
+      const token = data.token;
+
+      if (!user?.id || !token) {
+        throw new Error("Register response missing user or token");
+      }
+
+      persistSession(token, user);
+      setRegisterForm({ name: "", email: "", password: "" });
+      await loadTodos(String(user.id));
     } catch (error) {
-      setIsUserSelected(false);
       setStatus(error.message);
     }
   };
 
+  const handleLogin = async (event) => {
+    event.preventDefault();
+
+    const email = loginForm.email.trim();
+    const password = loginForm.password;
+
+    if (!email || !password) {
+      setStatus("Email and password are required");
+      return;
+    }
+
+    try {
+      setStatus("Logging in...");
+      const data = await loginUser({ email, password });
+
+      const user = data.data?.user;
+      const token = data.data?.token || data.token;
+
+      if (!user?.id || !token) {
+        throw new Error("Login response missing user or token");
+      }
+
+      persistSession(token, user);
+      setLoginForm((prev) => ({ ...prev, password: "" }));
+      await loadTodos(String(user.id));
+    } catch (error) {
+      setStatus(error.message);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      if (authToken) {
+        await logoutUser(authToken);
+      }
+    } catch {
+      // Even if API logout fails, clear local session to prevent stale UI.
+    }
+
+    clearSession();
+    setTodos([]);
+    setStatus("Logged out");
+  };
+
   const handleCreateTodo = async (event) => {
     event.preventDefault();
-    if (!todoTitle.trim() || !currentUserId) return;
+    if (!todoTitle.trim() || !currentUser?.id) {
+      return;
+    }
 
     try {
       setStatus("Creating todo...");
-      await apiRequest(``, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: todoTitle.trim(),
-          user_id: Number(currentUserId),
-        }),
+      await createTodo({
+        title: todoTitle.trim(),
+        userId: currentUser.id,
+        token: authToken,
       });
 
       setTodoTitle("");
-      await loadTodos(currentUserId);
+      await loadTodos(String(currentUser.id));
     } catch (error) {
       setStatus(error.message);
     }
@@ -88,12 +155,13 @@ function App() {
 
   const handleToggleCompleted = async (todo) => {
     try {
-      await apiRequest(`/user/${currentUserId}/${todo.id}/completed`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ completed: !todo.completed }),
+      await updateTodoCompleted({
+        userId: currentUser.id,
+        todoId: todo.id,
+        completed: !todo.completed,
+        token: authToken,
       });
-      await loadTodos(currentUserId);
+      await loadTodos(String(currentUser.id));
     } catch (error) {
       setStatus(error.message);
     }
@@ -101,95 +169,53 @@ function App() {
 
   const handleDeleteTodo = async (todoId) => {
     try {
-      await apiRequest(`/user/${currentUserId}/${todoId}`, {
-        method: "DELETE",
+      await removeTodo({
+        userId: currentUser.id,
+        todoId,
+        token: authToken,
       });
-      await loadTodos(currentUserId);
+      await loadTodos(String(currentUser.id));
     } catch (error) {
       setStatus(error.message);
     }
   };
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setTodos([]);
+      return;
+    }
+
+    loadTodos(String(currentUser.id)).catch((error) => {
+      setStatus(error.message);
+    });
+  }, [currentUser?.id, isAuthenticated, loadTodos]);
+
   return (
     <main className="app">
       <h1>Todo App</h1>
 
-      <section className="card">
-        <h2>Create user</h2>
-        <form onSubmit={handleCreateUser} className="row">
-          <input
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            placeholder="Enter user name"
-          />
-          <button type="submit">Create user</button>
-        </form>
-      </section>
-
-      <section className="card">
-        <h2>Use existing user</h2>
-        <div className="row">
-          <input
-            value={currentUserId}
-            onChange={(e) => setCurrentUserId(e.target.value)}
-            placeholder="User ID"
-          />
-          <button type="button" onClick={handleUseExistingUser}>
-            Continue
-          </button>
-        </div>
-      </section>
-
-      {isUserSelected ? (
-        <>
-          <section className="card">
-            <h2>Add todo (User ID: {currentUserId})</h2>
-            <form onSubmit={handleCreateTodo} className="row">
-              <input
-                value={todoTitle}
-                onChange={(e) => setTodoTitle(e.target.value)}
-                placeholder="Todo title"
-              />
-              <button type="submit">Add todo</button>
-            </form>
-          </section>
-
-          <section className="card">
-            <h2>Todos</h2>
-            {todos.length === 0 ? (
-              <p>No todos found for this user.</p>
-            ) : (
-              <ul className="todo-list">
-                {todos.map((todo) => (
-                  <li key={todo.id} className="todo-item">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={Boolean(todo.completed)}
-                        onChange={() => handleToggleCompleted(todo)}
-                      />
-                      <span className={todo.completed ? "done" : ""}>
-                        {todo.title}
-                      </span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteTodo(todo.id)}
-                    >
-                      Delete
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </>
+      {!isAuthenticated ? (
+        <AuthForms
+          registerForm={registerForm}
+          onRegisterChange={setRegisterField}
+          onRegisterSubmit={handleRegister}
+          loginForm={loginForm}
+          onLoginChange={setLoginField}
+          onLoginSubmit={handleLogin}
+        />
       ) : (
-        <section className="card">
-          <p className="hint">
-            First create a user or continue with an existing user ID.
-          </p>
-        </section>
+        <>
+          <SessionHeader currentUser={currentUser} onLogout={handleLogout} />
+          <TodoSection
+            todoTitle={todoTitle}
+            onTodoTitleChange={setTodoTitle}
+            onCreateTodo={handleCreateTodo}
+            todos={todos}
+            onToggleCompleted={handleToggleCompleted}
+            onDeleteTodo={handleDeleteTodo}
+          />
+        </>
       )}
 
       <p className="status">{status}</p>

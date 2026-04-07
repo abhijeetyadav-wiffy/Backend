@@ -8,6 +8,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
+    "test:smoke": "powershell -ExecutionPolicy Bypass -File ./scripts/smoke-test.ps1",
     "prisma:seed": "prisma db seed",
     "seed": "npm run prisma:seed"
   },

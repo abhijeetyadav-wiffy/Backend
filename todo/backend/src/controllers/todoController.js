@@ -8,6 +8,8 @@ import {
 } from "../models/todomodel.js";
 import { createUser } from "../models/usermodel.js";
 
+
+
 export const createUserHandler = async (req, res) => {
   try {
     const { name } = req.body;
@@ -44,6 +46,7 @@ export const getTodos = async (req, res) => {
   }
 };
 
+//GET USER BY ID
 export const getTodosByUserHandler = async (req, res) => {
   try {
     const { user_id } = req.params;
