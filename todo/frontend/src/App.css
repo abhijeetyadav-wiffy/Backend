@@ -1,0 +1,152 @@
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+  text-align: left;
+}
+
+.app h1 {
+  margin: 0 0 16px;
+  font-size: 2rem;
+}
+
+.card {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: #ffffff;
+}
+
+.card h2 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.header-row {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-row h2 {
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+input {
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 15px;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+input[type="email"],
+input[type="password"] {
+  min-width: 180px;
+}
+
+input::placeholder {
+  color: #94a3b8;
+}
+
+button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+.todo-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.todo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.todo-item:last-child {
+  border-bottom: none;
+}
+
+.todo-item label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #0f172a;
+}
+
+.done {
+  text-decoration: line-through;
+  color: #64748b;
+}
+
+.status {
+  margin-top: 14px;
+  color: #334155;
+}
+
+.hint {
+  margin: 0;
+  color: #475569;
+}
+
+input[type="checkbox"] {
+  min-width: auto;
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb;
+}
+
+.todo-item button {
+  background: #dc2626;
+}
+
+.todo-item button:hover {
+  background: #b91c1c;
+}
+
+@media (max-width: 640px) {
+  .app {
+    padding: 18px 12px 28px;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+
+  input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .todo-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .todo-item button {
+    width: 100%;
+  }
+}

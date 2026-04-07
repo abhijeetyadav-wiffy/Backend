@@ -1,0 +1,48 @@
+1.User table:
+    user_id(pk)
+    name
+    email unique
+    phone
+    created_at
+
+ 2.Address table:
+      One user can have multiple Addresses
+    address_id(pk)
+    user_id(fk)
+    city,state,pincode
+    type(home/work)
+
+3. Orders Table:
+   order_id (PK)
+   user_id (FK)
+   address_id (FK)
+   total_amount
+   order_status (pending, shipped, delivered)
+   created_at
+
+4.Order_Items:
+   order_item_id (PK)
+   order_id (FK)
+   product_id (FK)
+   quantity
+   price
+
+5.Products Table:
+   product_id(Pk)
+   name
+   price
+   stock_quanity
+
+6.Payment Table:
+   payment_id (PK)
+   order_id (FK)
+   payment_method
+   payment_status
+   paid_amount
+
+Realtionship:
+   User → Orders 
+   User → Addresses 
+   Orders → Order_Items 
+   Products → Order_Items 
+   Orders → Payments 
