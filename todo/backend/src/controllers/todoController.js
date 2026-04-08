@@ -6,27 +6,6 @@ import {
   deleteTodoByUserId,
   updateTodoCompleted,
 } from "../models/todomodel.js";
-import { createUser } from "../models/usermodel.js";
-
-
-
-export const createUserHandler = async (req, res) => {
-  try {
-    const { name } = req.body;
-
-    const user = await createUser(name);
-    res.status(201).json({
-      success: true,
-      message: "User created",
-      data: user,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-};
 
 export const getTodos = async (req, res) => {
   try {
@@ -47,7 +26,7 @@ export const getTodos = async (req, res) => {
 };
 
 //GET USER BY ID
-export const getTodosByUserHandler = async (req, res) => {
+export const getTodosByUserIdHandler = async (req, res) => {
   try {
     const { user_id } = req.params;
     const todos = await getTodosByUserId(user_id);
@@ -65,7 +44,8 @@ export const getTodosByUserHandler = async (req, res) => {
 
 export const createTodoHandler = async (req, res) => {
   try {
-    const { title, user_id } = req.body;
+    const { title } = req.body;
+    const user_id = req.user.id;
     const newTodo = await createTodo(title, user_id);
     res.status(201).json({
       success: true,
@@ -83,7 +63,7 @@ export const updateTodoByUserHandler = async (req, res) => {
     const { title } = req.body;
 
     const updatedTodo = await updateTodoByUserId(id, user_id, title);
-    if (!updatedTodo) {
+    if (!updatedTodo || updatedTodo.count === 0) {
       return res.status(404).json({
         success: false,
         message: "Todo not found for this user",
@@ -105,7 +85,7 @@ export const updateTodoCompletedHandler = async (req, res) => {
     const { completed } = req.body;
 
     const updatedTodo = await updateTodoCompleted(id, user_id, completed);
-    if (!updatedTodo) {
+    if (!updatedTodo || updatedTodo.count === 0) {
       return res.status(404).json({
         success: false,
         message: "Todo not found for this user",
@@ -141,6 +121,14 @@ export const deleteTodoUserByIdHandler = async (req, res) => {
   try {
     const { id, user_id } = req.params;
     const deleteTodo = await deleteTodoByUserId(user_id, id);
+
+    if (!deleteTodo || deleteTodo.count === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Todo not found for this user",
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: `Todo deleted`,
